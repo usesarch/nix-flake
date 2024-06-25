@@ -1,6 +1,6 @@
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, pkgs-unstable, ... }:
 
 {
   imports = [
@@ -18,41 +18,21 @@
   #  #channel
   #};
 
-  #GC
-  #nix.settings.auto-optimize-store = true;
-  #nix.optimise.automatic = true;
-  #nix.gc = {
-  #  automatic = true;
-  #  dates = "weekly";
-  #  options = "--delete-older-than 14d";
-  #};
-
   #}
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.timeout = 2;
-
-  #Display Manager 
-  #services.greetd = {
-  # enable = true;
-  #settings = {
-  # default_session = {
-  #  command =
-  #   "${pkgs.greetd.tuigreet}/bin/tuigreet --time --time-format '%I:%M %p | %a # %h | %F' --cmd Hyprland";
-  #user = "greeter";
-  #};
-  #};
-  #};
+  boot.loader.systemd-boot.configurationLimit = 8;
 
   #config lightdm?
   services.xserver.displayManager.lightdm = {
     greeters.slick = {
       enable = true;
       #theme = "Adwaita";
-      draw-user-backgrounds = true;
+      #draw-user-backgrounds = true;
     };
-    background = "/home/iblamefps/Downloads/f3ABtuv4.png";
+    #background = "/home/iblamefps/Downloads/f3ABtuv4.png";
   };
 
   ## Network
@@ -121,25 +101,24 @@
     };
   };
 
-  nixpkgs.config.permittedInsecurePackages = [ "electron-25.9.0" ];
+  nixpkgs.config.permittedInsecurePackages =
+    [ "electron-25.9.0" ]; # how to permit all electorn pkgs versions?
 
   #systemPackages (allowed unfree above ^ and nerdfonts also )
-  environment.systemPackages = with pkgs; [
+  environment.systemPackages = (with pkgs; [
     #Main config
     zsh
     oh-my-zsh
-    waybar
-    swww
-    kitty
-    rofi-wayland
-    rofi
     neovim
-    eww-wayland
     hyprland
+    #writeShellScriptBin
+    #writeShellScript
     wlogout
+
     wl-clipboard
     cliphist
     wl-clip-persist
+
     wl-screenrec
     grim
     slurp
@@ -147,7 +126,9 @@
     mpv
     hyprpicker
     imv
+
     ranger
+    lf
     ueberzug
 
     #apps & stuff
@@ -155,29 +136,40 @@
     obsidian
     firefox-wayland
     discord
+    jetbrains.rider
+    #discord-screenaudio #avail 24.05
     nuclear
+    spotify
     octaveFull
-
-    #spotify #better alternative?
-
-    #ricing tools & none essentials
-    #gammastep
-    #avizo #Notifi daemon
-    dunst
+    rstudio
+    lorien
+    #Desktop RiceStuff
+    gammastep
     libnotify
     hyprpaper
+    brightnessctl
+    waybar
+    swww
+    kitty
+    eww
+    rofi
+    #rofi-wayland
 
     #systemPackages
-    networkmanager # includes nmtui
+    networkmanager
     blueman
-    brightnessctl
     pipewire
     pavucontrol
     pulseaudio
     xwayland
     xwaylandvideobridge
     dropbox
-    greetd.tuigreet
+    nh
+    #texlivePackages.latexmk
+    texliveFull
+    postgresql
+    sqlite
+    mysql
 
     #Linux tools
     xdg-utils
@@ -187,7 +179,9 @@
     wget # gnu web geti
     fzf
     git
-    #gtk 
+    gtk2
+    gtk3
+    gtk4
     unzip
     w3m-nox
     tldr
@@ -202,8 +196,8 @@
     zoxide
     scc
     thefuck
-    eza #replace ls 
-    duf 
+    eza # replace ls
+    duf
     bat
     diff-so-fancy
     rm-improved
@@ -214,10 +208,11 @@
     cpufetch
     lsd
     speedtest-cli
-    surge
-    rstudio
-    lorien
-  ];
+  ])
+
+    ++
+
+    (with pkgs-unstable; [ floorp vscode ]);
 
   ##sound 
   sound.enable = true;
@@ -257,6 +252,41 @@
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
+  ##Stylix
+
+  stylix.base16Scheme = {
+    base00 = "272727";
+    base01 = "16161E";
+    base02 = "343A52";
+    base03 = "444B6A";
+    base04 = "787C99";
+    base05 = "A9B1D6";
+    base06 = "CBCCD1";
+    base07 = "D5D6DB";
+    base08 = "C0CAF5";
+    base09 = "A9B1D6";
+    base0A = "0DB9D7";
+    base0B = "9ECE6A";
+    base0C = "B4F9F8";
+    base0D = "2AC3DE";
+    base0E = "BB9AF7";
+    base0F = "F7768E";
+  };
+
+  stylix.image = /home/iblamefps/Downloads/f3ABtuv4.png;
+  stylix.polarity = "dark";
+  stylix.targets.nixvim.enable = false;
+
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d";
+  };
+
+  system = {
+    autoUpgrade.enable = true;
+    autoUpgrade.allowReboot = true;
+  };
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
