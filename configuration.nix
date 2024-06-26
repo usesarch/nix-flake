@@ -113,8 +113,8 @@ in {
     oh-my-zsh
     neovim
     hyprland
-    writeShellScriptBin
-    writeShellScript
+    #writeShellScriptBin
+    #writeShellScript
     wlogout
     wl-clipboard
     cliphist
