@@ -2,23 +2,23 @@
 
 { config, lib, pkgs, pkgs-unstable, ... }:
 
-{
+let
+  # add unstable channel declaratively
+  unstableTarball = fetchTarball
+    "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz";
+in {
   imports = [
     ./hardware-configuration.nix
 
   ];
 
-  # Autoupgrade
-  #system.autoUpgrade = {
-  #  enable = true;
-  #  operation = "boot";
-  #  flake = "~/.dotfiles";
-  #  #flags 
-  #  dates = "weekly";
-  #  #channel
-  #};
+  nixpkgs.config = {
+    allowUnfree = true;
+    packageOverrides = pkgs: {
+      unstable = import unstableTarball { config = config.nixpkgs.config; };
+    };
+  };
 
-  #}
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -68,16 +68,14 @@
     shell = pkgs.zsh;
   };
 
-  #Allow Unfree Packages
-  nixpkgs.config.allowUnfree = true;
-
   #Hyprland
   programs.hyprland.enable = true;
 
   #Waybar
   programs.waybar.enable = true;
 
-  #Starship prompt 
+  #Starship prompt
+  #installed imperatively (oops)
 
   ##Thunar
   programs.thunar.enable = true;
@@ -105,20 +103,22 @@
     [ "electron-25.9.0" ]; # how to permit all electorn pkgs versions?
 
   #systemPackages (allowed unfree above ^ and nerdfonts also )
-  environment.systemPackages = (with pkgs; [
-    #Main config
+  environment.systemPackages = with pkgs; [
+    #Unstable
+    unstable.vscode
+    unstable.floorp
+
+    #Stable
     zsh
     oh-my-zsh
     neovim
     hyprland
-    #writeShellScriptBin
-    #writeShellScript
+    writeShellScriptBin
+    writeShellScript
     wlogout
-
     wl-clipboard
     cliphist
     wl-clip-persist
-
     wl-screenrec
     grim
     slurp
@@ -126,12 +126,9 @@
     mpv
     hyprpicker
     imv
-
     ranger
     lf
     ueberzug
-
-    #apps & stuff
     zathura
     obsidian
     firefox-wayland
@@ -143,7 +140,6 @@
     octaveFull
     rstudio
     lorien
-    #Desktop RiceStuff
     gammastep
     libnotify
     hyprpaper
@@ -152,24 +148,23 @@
     swww
     kitty
     eww
-    rofi
-    #rofi-wayland
-
-    #systemPackages
+    rofi #rofi-wayland behaved diff but deprecated? (find QOL fix)
     networkmanager
     blueman
     pipewire
     pavucontrol
     pulseaudio
     xwayland
-    xwaylandvideobridge
+    xwaylandvideobridge #discord screenshare 
     dropbox
     nh
     #texlivePackages.latexmk
     texliveFull
-    postgresql
-    sqlite
-    mysql
+    
+    #containerize this instead? Probably a bad idea to have it here: VV
+    #postgresql
+    #sqlite
+    #mysql
 
     #Linux tools
     xdg-utils
@@ -208,13 +203,8 @@
     cpufetch
     lsd
     speedtest-cli
-  ])
+  ];
 
-    ++
-
-    (with pkgs-unstable; [ floorp vscode ]);
-
-  ##sound 
   sound.enable = true;
   security.rtkit.enable = true;
   services.pipewire = {
@@ -234,10 +224,6 @@
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  # environment.systemPackages = with pkgs; [
-  #   vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-  #   wget
-  # ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -287,6 +273,16 @@
     autoUpgrade.enable = true;
     autoUpgrade.allowReboot = true;
   };
+
+# Autoupgrade
+  #system.autoUpgrade = {
+  #  enable = true;
+  #  operation = "boot";
+  #  flake = "~/.dotfiles";
+  #  #flags 
+  #  dates = "weekly";
+  #  #channel
+  #};
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
